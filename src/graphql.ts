@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 
 const typeDefs = gql`
     type Query {
-        randomUser: User!
+        randomUser: [User!]!
     }
 
     type User {
@@ -78,7 +78,7 @@ const typeDefs = gql`
     }
 `
 
-const randomUserAPI = 'https://randomuser.me/api/'
+const randomUserAPI = 'https://randomuser.me/api/?nat=gb&results=5'
 
 interface Response {
     results: any[] // generate from graphql schema ?
@@ -89,7 +89,7 @@ const resolvers = {
         randomUser: async () => {
             const response = await fetch(randomUserAPI)
             const json = (await response.json()) as Response
-            return json.results[0]
+            return json.results
         },
     },
 }
