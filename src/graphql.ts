@@ -1,12 +1,17 @@
-import {ApolloServer, gql} from 'apollo-server-lambda'
-import fetch from 'node-fetch'
+import { ApolloServer, gql, UserInputError } from 'apollo-server-lambda'
+const data = require('../src/data.json');
 
 const typeDefs = gql`
     type Query {
-        randomUser: [User!]!
+        users: [User!]!
+    }
+
+    type Mutation {
+        userStatus(userStatus: UserStatusInput!): User!
     }
 
     type User {
+        status: String!
         name: Name!
         gender: String!
         email: String!
@@ -19,6 +24,11 @@ const typeDefs = gql`
         cell: String!
         id: id!
         nat: String!
+    }
+
+    input UserStatusInput {
+        status: String!
+        id: String!
     }
 
     type Location {
@@ -78,20 +88,25 @@ const typeDefs = gql`
     }
 `
 
-const randomUserAPI = 'https://randomuser.me/api/?nat=gb&results=5'
-
 interface Response {
     results: any[] // generate from graphql schema ?
 }
 
 const resolvers = {
     Query: {
-        randomUser: async () => {
-            const response = await fetch(randomUserAPI)
-            const json = (await response.json()) as Response
-            return json.results
-        },
+        users: () => data,
     },
+    Mutation: {
+        userStatus: (parent: any, { userStatus }: any) => {
+            console.log(userStatus);
+            const index = data.findIndex((u: any) => u.id.value === userStatus.id);
+            if (index === -1) {
+                throw new UserInputError('User not found');
+            }
+            data[index].status = userStatus.status;
+            return data[index];
+        }
+    }
 }
 
 const server = new ApolloServer({
