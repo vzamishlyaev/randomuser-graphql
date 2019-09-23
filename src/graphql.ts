@@ -3,88 +3,23 @@ const data = require('../src/data.json');
 
 const typeDefs = gql`
     type Query {
-        users: [User!]!
+        products(page: Int, limit: Int, manufacturer: [String], type: [String]): [Product!]!
     }
 
-    type Mutation {
-        userStatus(userStatus: UserStatusInput!): User!
-    }
-
-    type User {
-        status: String!
-        name: Name!
-        gender: String!
-        email: String!
-        location: Location!
-        login: Login!
-        picture: Picture!
-        dob: Dob!
-        registered: Registered!
-        phone: String!
-        cell: String!
-        id: id!
-        nat: String!
-    }
-
-    input UserStatusInput {
-        status: String!
-        id: String!
-    }
-
-    type Location {
-        street: String!
-        city: String!
-        state: String!
-        postcode: String!
-        coordinates: Coordinates!
-        timezone: Timezone!
-    }
-
-    type Timezone {
-        offset: String!
-        description: String!
-    }
-
-    type Coordinates {
-        latitude: String!
-        longitude: String!
-    }
-
-    type Picture {
-        large: String!
-        medium: String!
-        thumbnail: String!
-    }
-
-    type Login {
-        uuid: ID!
-        username: String!
-        password: String!
-        salt: String!
-        md5: String!
-        sha1: String!
-        sha256: String!
-    }
-
-    type Name {
+    type Product {
+        productId: Int!
+        image: String!
         title: String!
-        first: String!
-        last: String!
+        price: Float!
+        rating: Float!
+        manufacturer: String!
+        type: String!
+        features: Feature!
     }
 
-    type Dob {
-        date: String!
-        age: Int!
-    }
-
-    type Registered {
-        date: String!
-        age: Int!
-    }
-
-    type id {
-        name: String
-        value: String
+    type Feature {
+        feature: String!
+        value: String!
     }
 `
 
@@ -94,18 +29,21 @@ interface Response {
 
 const resolvers = {
     Query: {
-        users: () => data,
-    },
-    Mutation: {
-        userStatus: (parent: any, { userStatus }: any) => {
-            console.log(userStatus);
-            const index = data.findIndex((u: any) => u.id.value === userStatus.id);
-            if (index === -1) {
-                throw new UserInputError('User not found');
+        products: (root: any, { page, limit, manufacturer, type }: any) => {
+            let d = [...data];
+            if (manufacturer && manufacturer.length) {
+                const man = manufacturer.map((m: string) => m.toLowerCase());
+                d = d.filter(({ manufacturer: m }) => man.includes(m.toLowerCase()));
             }
-            data[index].status = userStatus.status;
-            return data[index];
-        }
+            if (type && type.length) {
+                const typ = type.map((t: string) => t.toLowerCase());
+                d = d.filter(({ type: t }) => typ.includes(t.toLowerCase()));
+            }
+            if (page !== undefined && limit !== undefined) {
+                d = [...d.slice(page * limit, page * limit + limit)];
+            }
+            return d;
+        },
     }
 }
 
