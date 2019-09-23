@@ -4,6 +4,8 @@ const data = require('../src/data.json');
 const typeDefs = gql`
     type Query {
         products(page: Int, limit: Int, manufacturer: [String], type: [String]): [Product!]!
+        manufacturers: [String!]!
+        types: [String!]!
     }
 
     type Product {
@@ -44,6 +46,8 @@ const resolvers = {
             }
             return d;
         },
+        manufacturers: () => [...new Set(data.map(({ manufacturer }: any) => manufacturer))],
+        types: () => [...new Set(data.map(({ type }: any) => type))]
     }
 }
 
