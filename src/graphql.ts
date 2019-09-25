@@ -3,7 +3,7 @@ const data = require('../src/data.json');
 
 const typeDefs = gql`
     type Query {
-        products(page: Int, limit: Int, manufacturer: [String], type: [String]): [Product!]!
+        products(productId: Int, page: Int, limit: Int, manufacturer: [String], type: [String]): [Product!]!
         manufacturers: [String!]!
         types: [String!]!
     }
@@ -31,8 +31,11 @@ interface Response {
 
 const resolvers = {
     Query: {
-        products: (root: any, { page, limit, manufacturer, type }: any) => {
+        products: (root: any, { productId, page, limit, manufacturer, type }: any) => {
             let d = [...data];
+            if (productId) {
+                return d.filter(({ productId: pId }) => pId === productId);
+            }
             if (manufacturer && manufacturer.length) {
                 const man = manufacturer.map((m: string) => m.toLowerCase());
                 d = d.filter(({ manufacturer: m }) => man.includes(m.toLowerCase()));
